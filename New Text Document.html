@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Super Attractive 3D Project Card with RGB Background</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/hover.css/2.3.1/css/hover-min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap");
+
+      body {
+        font-family: "Orbitron", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background: linear-gradient(45deg, #0011ff, #00ffff, #001eff, #00ffff);
+        background-size: 400% 400%;
+        animation: rgb-background 15s ease infinite;
+        overflow: hidden;
+      }
+
+      @keyframes rgb-background {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .card {
+        width: 300px;
+        background: rgba(15, 15, 15, 0.8);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .card:hover {
+        transform: translateY(-10px) rotate3d(1, 1, 0, 15deg);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+      }
+
+      .card-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        filter: brightness(0.8) saturate(1.2);
+      }
+
+      .card-content {
+        padding: 20px;
+      }
+
+      .card-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #00ffff;
+        text-shadow: 0 0 5px #00ffff;
+      }
+
+      .card-description {
+        font-size: 14px;
+        color: #ccc;
+        margin-bottom: 15px;
+      }
+
+      .card-languages {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .language-tag {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        font-size: 12px;
+        color: #fff;
+      }
+
+      .language-tag i {
+        font-size: 14px;
+      }
+
+      .html-tag {
+        color: #e44d26;
+      }
+      .css-tag {
+        color: #264de4;
+      }
+      .js-tag {
+        color: #f0db4f;
+      }
+
+      .card-link {
+        display: inline-block;
+        padding: 10px 20px;
+        background: rgba(0, 255, 255, 0.2);
+        color: #fff;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: 1px solid #00ffff;
+      }
+
+      .card-link:hover {
+        background: rgba(0, 255, 255, 0.4);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <div style="display: flex; flex-direction: row; gap: 4rem">
+      <div class="card animate__animated animate__fadeInUp">
+        <img
+          src="https://picsum.photos/300/200"
+          alt="Project Cover"
+          class="card-image"
+        />
+        <div class="card-content">
+          <h2 class="card-title animate__animated animate__fadeInDown">
+            Awesome Project
+          </h2>
+          <p class="card-description animate__animated animate__fadeIn">
+            This is a super cool project with amazing features and stunning
+            design. Check it out!
+          </p>
+          <div class="card-languages animate__animated animate__fadeIn">
+            <span class="language-tag html-tag"
+              ><i class="fab fa-html5"></i> HTML</span
+            >
+            <span class="language-tag css-tag"
+              ><i class="fab fa-css3-alt"></i> CSS</span
+            >
+            <span class="language-tag js-tag"
+              ><i class="fab fa-js"></i> JavaScript</span
+            >
+          </div>
+          <a
+            href="https://github.com/your-username/your-repo"
+            class="card-link hvr-grow"
+          >
+            <i class="fab fa-github"></i> View on GitHub
+          </a>
+        </div>
+      </div>
+      <!-- for another card -->
+      <div></div>
+    </div>
+  </body>
+</html>
