@@ -68,6 +68,7 @@ class HTMLSEOScanner:
                     'type': 'WARNING',
                     'element': 'Title Tag',
                     'issue': 'Title too short',
+                    'actual_text': title_text,
                     'description': f'Title is {title_length} characters, recommended minimum is 30'
                 })
             elif title_length > 160:
@@ -75,6 +76,7 @@ class HTMLSEOScanner:
                     'type': 'WARNING',
                     'element': 'Title Tag',
                     'issue': 'Title too long',
+                    'actual_text': title_text,
                     'description': f'Title is {title_length} characters, recommended maximum is 160'
                 })
             elif title_length < 150:
@@ -82,8 +84,10 @@ class HTMLSEOScanner:
                     'type': 'RECOMMENDATION',
                     'element': 'Title Tag',
                     'issue': 'Title could be optimized',
+                    'actual_text': title_text,
                     'description': f'Title is {title_length} characters, ideal range is 150-160'
                 })
+    
     
     def _check_h1_tag(self, soup):
         """Check H1 tag optimization"""
@@ -119,6 +123,7 @@ class HTMLSEOScanner:
                     'type': 'WARNING',
                     'element': 'H1 Tag',
                     'issue': 'H1 too short',
+                    'actual_text': h1_text,
                     'description': f'H1 is {h1_length} characters, recommended minimum is 20'
                 })
             elif h1_length > 70:
@@ -126,6 +131,7 @@ class HTMLSEOScanner:
                     'type': 'WARNING',
                     'element': 'H1 Tag',
                     'issue': 'H1 too long',
+                    'actual_text': h1_text,
                     'description': f'H1 is {h1_length} characters, recommended maximum is 70'
                 })
     
@@ -198,6 +204,7 @@ class HTMLSEOScanner:
                     'type': 'WARNING',
                     'element': 'Meta Description',
                     'issue': 'Meta description too short',
+                    'actual_text': content,
                     'description': f'Meta description is {desc_length} characters, recommended minimum is 120'
                 })
             elif desc_length > 160:
@@ -205,6 +212,7 @@ class HTMLSEOScanner:
                     'type': 'WARNING',
                     'element': 'Meta Description',
                     'issue': 'Meta description too long',
+                    'actual_text': content,
                     'description': f'Meta description is {desc_length} characters, recommended maximum is 160'
                 })
     
@@ -236,6 +244,7 @@ class HTMLSEOScanner:
                         'type': 'RECOMMENDATION',
                         'element': 'Image ALT',
                         'issue': 'ALT text could be longer',
+                        'actual_text': alt_text,
                         'description': f'Image ALT text is {alt_length} characters, ideal range is 80-125'
                     })
             
@@ -271,6 +280,7 @@ class HTMLSEOScanner:
                 'type': 'WARNING',
                 'element': 'Image ALT',
                 'issue': 'ALT text too long',
+                'actual_text': alt_text,
                 'description': f'{images_with_long_alt} images have ALT text longer than 125 characters'
             })
     

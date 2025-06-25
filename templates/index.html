@@ -279,6 +279,31 @@
                 grid-template-columns: 1fr;
             }
         }
+        .actual-text {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 5px;
+    font-size: 0.9rem;
+        }
+
+        .text-content {
+            font-style: italic;
+            color: #444;
+            word-break: break-word;
+        }
+
+        .issue-card.critical .actual-text {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        .issue-card.warning .actual-text {
+            background: rgba(254, 202, 87, 0.1);
+        }
+
+        .issue-card.recommendation .actual-text {
+            background: rgba(72, 219, 251, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -431,20 +456,27 @@
         }
 
         function addIssueSection(title, issues, type) {
-            const section = document.createElement('div');
-            section.className = 'issues-section';
-            section.innerHTML = `
-                <h3 class="section-title">${title}</h3>
-                ${issues.map(issue => `
-                    <div class="issue-card ${type}">
-                        <div class="issue-title">${issue.issue}</div>
-                        <div class="issue-element">${issue.element}</div>
-                        <div class="issue-description">${issue.description}</div>
-                    </div>
-                `).join('')}
-            `;
-            issuesContainer.appendChild(section);
-        }
+        const section = document.createElement('div');
+        section.className = 'issues-section';
+        section.innerHTML = `
+            <h3 class="section-title">${title}</h3>
+            ${issues.map(issue => `
+                <div class="issue-card ${type}">
+                    <div class="issue-title">${issue.issue}</div>
+                    <div class="issue-element">${issue.element}</div>
+                    <div class="issue-description">${issue.description}</div>
+                    ${issue.actual_text !== undefined ? `
+                        <div class="actual-text">
+                            <strong>Current text:</strong> 
+                            <span class="text-content">"${issue.actual_text}"</span>
+                            ${issue.image_src ? `<br><small>Image: ${issue.image_src}</small>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('')}
+        `;
+        issuesContainer.appendChild(section);
+    }
     </script>
 </body>
 </html>
