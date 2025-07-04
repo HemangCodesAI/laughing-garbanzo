@@ -304,6 +304,108 @@
         .issue-card.recommendation .actual-text {
             background: rgba(72, 219, 251, 0.1);
         }
+        .ai-recommendation-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .ai-recommendation-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .ai-recommendation-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .ai-recommendations {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f8ff;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+            display: none;
+        }
+
+        .ai-recommendations.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-recommendations h4 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .ai-recommendations li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e8f5e8;
+            color: #2e7d32;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .ai-recommendations li:last-child {
+            border-bottom: none;
+        }
+
+        .ai-recommendations li:before {
+            content: "💡";
+            flex-shrink: 0;
+        }
+
+        .ai-loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #4CAF50;
+        }
+
+        .ai-loading.show {
+            display: block;
+        }
+
+        .ai-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e8f5e8;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 8px;
+        }
     </style>
 </head>
 <body>
@@ -350,6 +452,8 @@
         const scannedUrl = document.getElementById('scannedUrl');
         const summary = document.getElementById('summary');
         const issuesContainer = document.getElementById('issuesContainer');
+        let currentTaskId = null;
+        let eventSource = null;
 
         scanBtn.addEventListener('click', scanWebsite);
         urlInput.addEventListener('keypress', function(e) {
@@ -384,6 +488,8 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    currentTaskId = data.task_id
+                    startEventSource(data.task_id);
                     displayResults(data);
                 } else {
                     showError(data.error);
@@ -460,7 +566,7 @@
         section.className = 'issues-section';
         section.innerHTML = `
             <h3 class="section-title">${title}</h3>
-            ${issues.map(issue => `
+            ${issues.map((issue,index) => `
                 <div class="issue-card ${type}">
                     <div class="issue-title">${issue.issue}</div>
                     <div class="issue-element">${issue.element}</div>
@@ -472,11 +578,124 @@
                             ${issue.image_src ? `<br><small>Image: ${issue.image_src}</small>` : ''}
                         </div>
                     ` : ''}
+                    ${type === 'recommendation' ? `
+                            <button id="actionBtn" class="ai-recommendation-btn" disabled=True onclick="getAIRecommendation('${issue.issue}', '${issue.description}', '${issue.actual_text}', ${index})">
+                                🤖 Get AI Suggestions
+                            </button>
+                            <div class="ai-loading" id="ai-loading-${index}">
+                                <div class="ai-spinner"></div>
+                                <p>Generating AI recommendations...</p>
+                            </div>
+                            <div class="ai-recommendations" id="ai-recommendations-${index}">
+                                <h4>🤖 AI Recommendations</h4>
+                                <ul id="ai-list-${index}"></ul>
+                            </div>
+                        ` : ''}
                 </div>
             `).join('')}
         `;
         issuesContainer.appendChild(section);
     }
+        
+        function startEventSource(taskId) {
+        eventSource = new EventSource(`/events/${taskId}`);
+        
+        eventSource.addEventListener('summary_complete', function(event) {
+            const data = JSON.parse(event.data);
+            
+            // Store summary in cookie
+            document.cookie = `summary_${taskId}=${encodeURIComponent(data.summary)}; path=/`;
+            const actionBtn=document.getElementById('actionBtn');
+            // Enable the action button
+            actionBtn.disabled = false;
+            
+            // Close event source
+            eventSource.close();
+        });
+        
+        eventSource.addEventListener('summary_error', function(event) {
+            const data = JSON.parse(event.data);
+            summaryDiv.style.display = 'block';
+            summaryDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+            eventSource.close();
+        });
+        
+        eventSource.addEventListener('heartbeat', function(event) {
+            console.log('Heartbeat received');
+        });
+        
+        eventSource.onerror = function(event) {
+            console.error('EventSource error:', event);
+        };
+    }
+
+        function getSummaryFromCookie(taskId) {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === `summary_${taskId}`) {
+                    return decodeURIComponent(value);
+                }
+            }
+            return null;
+        }
+        
+        async function getAIRecommendation(issueType, description, current_content, index) {
+            const button = event.target;
+            const loading = document.getElementById(`ai-loading-${index}`);
+            const recommendations = document.getElementById(`ai-recommendations-${index}`);
+            const aiList = document.getElementById(`ai-list-${index}`);
+            
+            // Show loading state
+            button.disabled = true;
+            loading.classList.add('show');
+            recommendations.classList.remove('show');
+            
+            try {
+                const response = await fetch('/ai-recommendation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        issue_type: issueType,
+                        description: description,
+                        current_content: current_content ,
+                        context:getSummaryFromCookie(currentTaskId) || ''
+                        
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Clear previous recommendations
+                    aiList.innerHTML = '';
+                    
+                    // Add new recommendations
+                    data.recommendations.forEach(rec => {
+                        const li = document.createElement('li');
+                        li.textContent = rec;
+                        aiList.appendChild(li);
+                    });
+                    
+                    // Show recommendations
+                    recommendations.classList.add('show');
+                    button.textContent = '✅ AI Suggestions Generated';
+                    button.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                } else {
+                    throw new Error(data.error || 'Failed to get AI recommendations');
+                }
+            } catch (err) {
+                // Show error
+                aiList.innerHTML = `<li style="color: #dc3545;">❌ Error: ${err.message}</li>`;
+                recommendations.classList.add('show');
+                button.textContent = '🔄 Try Again';
+                button.disabled = false;
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
     </script>
 </body>
 </html>

@@ -88,7 +88,6 @@ class HTMLSEOScanner:
                     'description': f'Title is {title_length} characters, ideal range is 150-160'
                 })
     
-    
     def _check_h1_tag(self, soup):
         """Check H1 tag optimization"""
         h1_tags = soup.find_all('h1')
@@ -380,6 +379,69 @@ class HTMLSEOScanner:
         
         return "\n".join(report)
 
+    def extract_page_content(self, html_content):
+        """
+        Extract clean text content from HTML by removing all tags, links, styles, and scripts
+        Returns a dictionary with various content extractions
+        """
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # Remove script and style elements completely
+        for script in soup(["script", "style", "noscript"]):
+            script.decompose()
+        
+        # Remove comments
+        from bs4 import Comment
+        for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
+            comment.extract()
+        
+        # Extract different types of content
+        content_data = {
+            'title': self._extract_title(soup),
+            'meta_description': self._extract_meta_description(soup),
+            # 'headings': self._extract_headings(soup),
+            'body_text': self._extract_body_text(soup)
+        }
+        return content_data
+    
+    def _extract_title(self, soup):
+        """Extract page title"""
+        title_tag = soup.find('title')
+        return title_tag.get_text().strip() if title_tag else ''
+    
+    def _extract_meta_description(self, soup):
+        """Extract meta description"""
+        meta_desc = soup.find('meta', attrs={'name': 'description'})
+        return meta_desc.get('content', '').strip() if meta_desc else ''
+    
+    def _extract_body_text(self, soup):
+        """Extract clean body text without HTML tags"""
+        # Remove navigation, footer, sidebar, and other non-content elements
+        for element in soup.find_all(['nav', 'footer', 'aside', 'header']):
+            element.decompose()
+        
+        # Remove elements with common non-content class names
+        non_content_classes = [
+            'navigation', 'nav', 'menu', 'sidebar', 'footer', 'header',
+            'advertisement', 'ads', 'social', 'share', 'comments'
+        ]
+        
+        for class_name in non_content_classes:
+            for element in soup.find_all(class_=lambda x: x and any(nc in ' '.join(x).lower() for nc in non_content_classes)):
+                element.decompose()
+        
+        # Get text from body or entire document if body not found
+        body = soup.find('body') or soup
+        
+        # Extract text and clean it up
+        text = body.get_text(separator=' ', strip=True)
+        
+        # Clean up whitespace
+        text = re.sub(r'\s+', ' ', text)  # Replace multiple whitespace with single space
+        text = re.sub(r'\n+', '\n', text)  # Replace multiple newlines with single newline
+        
+        return text
+    
 # Example usage
 def scan_html_file(file_path, url=None):
     """Scan an HTML file for SEO vulnerabilities"""
