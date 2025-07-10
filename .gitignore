@@ -1,0 +1,5 @@
+.venv/
+modelfile.txt
+output.txt
+test.ipynb
+__pycache__/

@@ -131,6 +131,19 @@ def background_summarize_task(task_id, content):
                 }
             })
 
+def generate_ai_recommendation(issue_type, description, current_content, context):
+    """Generate AI-powered SEO recommendations"""
+    recommendations = []
+    response = ollama.chat(
+    model="gemma3:4b",
+    messages=[
+        {"role": "system", "content": f'''This is the summaryu of a website.{context}. the user have some issues with the content of the website. The user will provide the issue type and the element that needs to be fixed. You need to provide a solution for the issue based on the content of the website.Give the user the correct statement that should replace the current text . The solution should be in a single line and should not contain any code or HTML tags. The solution should be in English.'''},
+        {"role": "user", "content": f"issue_type:{issue_type},issue_decription:{description},current_contetn:{current_content}"}
+    ]
+)
+    recommendations.append(response["message"]["content"])
+    return recommendations
+
 @app.route('/ai-recommendation', methods=['POST'])
 def get_ai_recommendation():
     """Get AI-powered recommendations for SEO optimization"""
@@ -157,24 +170,9 @@ def get_ai_recommendation():
             'error': f'Failed to generate recommendations: {str(e)}'
         })
 
-def generate_ai_recommendation(issue_type, description, current_content, context):
-    """Generate AI-powered SEO recommendations"""
-    recommendations = []
-    response = ollama.chat(
-    model="gemma3:4b",
-    messages=[
-        {"role": "system", "content": f'''This is the summaryu of a website.{context}. the user have some issues with the content of the website. The user will provide the issue type and the element that needs to be fixed. You need to provide a solution for the issue based on the content of the website.Give the user the correct statement that should replace the current text . The solution should be in a single line and should not contain any code or HTML tags. The solution should be in English.'''},
-        {"role": "user", "content": f"issue_type:{issue_type},issue_decription:{description},current_contetn:{current_content}"}
-    ]
-)
-    recommendations.append(response["message"]["content"])
-    return recommendations
-
-
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/task_status/<task_id>')
 def get_task_status(task_id):
@@ -281,7 +279,7 @@ def scan_url():
         })
         
     except Exception as e:
-        return jsonify({
+        return jsonify({    
             'success': False,
             'error': f'An error occurred: {str(e)}'
         })
@@ -291,5 +289,5 @@ def health_check():
     """Health check endpoint"""
     return jsonify({'status': 'healthy'})
 
-if __name__ == '__main__':
+if __name__ == '__main__':  
     app.run(debug=True, host='0.0.0.0', port=5000)
