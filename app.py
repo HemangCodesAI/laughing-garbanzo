@@ -9,9 +9,21 @@ import ollama
 import uuid
 import threading
 from queue import Queue
-import json
+import json, os
+from openai import AzureOpenAI
+from dotenv import load_dotenv
+load_dotenv()
 
+endpoint = os.getenv("ENDPOINT_URL", "https://aisuggestionmultilipi.openai.azure.com/")
+deployment = os.getenv("DEPLOYMENT_NAME", "gpt-4.1-nano")
+subscription_key = os.getenv("AZURE_OPENAI_API_KEY", "REPLACE_WITH_YOUR_KEY_VALUE_HERE")
 
+# Initialize Azure OpenAI client with key-based authentication
+client = AzureOpenAI(
+    azure_endpoint=endpoint,
+    api_key=subscription_key,
+    api_version="2025-01-01-preview",
+)
 # Import your scanner class (assuming it's in a file called html_seo_scanner.py)
 # from html_seo_scanner import HTMLSEOScanner
 
@@ -77,24 +89,55 @@ task_results = {}
 # SSE event queues for each client
 client_queues = {}
 
-def background_summarize_task(task_id, content):
+def background_summarize_task(task_id, url):
     """Background task that simulates content summarization"""
     try:
         # Update task status
         task_status[task_id] = "processing"
-        
         # Simulate long-running summarization process
-        response = ollama.chat(
-            model="gemma3:4b",
-            messages=[
-                {"role": "system", "content": '''You will be given a text content of a website by the user. summarize the text  into  a shorter form such that summary can be used later as context to firther improve the content.ruturn only the summary without any additional text or explanation. The summary should be concise and capture the main points of the content.'''},
-                {"role": "user", "content": f"{content}"}
-            ]
-        )  # Replace with your actual summarization logic
-        
+        # response = ollama.chat(
+        #     model="gemma3:4b",
+        #     messages=[
+        #         {"role": "system", "content": '''You will be given a text content of a website by the user. summarize the text  into  a shorter form such that summary can be used later as context to firther improve the content.ruturn only the summary without any additional text or explanation. The summary should be concise and capture the main points of the content.'''},
+        #         {"role": "user", "content": f"{content}"}
+        #     ]
+        # )  # Replace with your actual summarization logic
+        messages = [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": '''You will be given a url of a website by the user. summarize the text into  a shorter form such that summary can be used later as context to firther improve the content.ruturn only the summary without any additional text or explanation. The summary should be concise and capture the main points of the content.keep the summary in the same language as the content of the website.'''
+                    }
+                ]
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f"{url}"
+                    }
+                ]
+            }
+        ]
+        completion = client.chat.completions.create(
+        model=deployment,
+        messages=messages,
+        max_tokens=800,
+        temperature=1,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+        stop=None,
+        stream=False
+        )
+
+        response=completion.choices[0].message.content
         # Simulate summary result
         # summary = f"Summary of content: {content[:100]}... (This is a mock summary)"
-        summary = response["message"]["content"]
+        summary = response
         print("Summarized")
         # Store the result
         task_results[task_id] = {
@@ -134,14 +177,47 @@ def background_summarize_task(task_id, content):
 def generate_ai_recommendation(issue_type, description, current_content, context):
     """Generate AI-powered SEO recommendations"""
     recommendations = []
-    response = ollama.chat(
-    model="gemma3:4b",
-    messages=[
-        {"role": "system", "content": f'''This is the summaryu of a website.{context}. the user have some issues with the content of the website. The user will provide the issue type and the element that needs to be fixed. You need to provide a solution for the issue based on the content of the website.Give the user the correct statement that should replace the current text . The solution should be in a single line and should not contain any code or HTML tags. The solution should be in English.'''},
-        {"role": "user", "content": f"issue_type:{issue_type},issue_decription:{description},current_contetn:{current_content}"}
-    ]
-)
-    recommendations.append(response["message"]["content"])
+    # response = ollama.chat(
+    # model="gemma3:4b",
+    # messages=[
+    #     {"role": "system", "content": f'''This is the summaryu of a website.{context}. the user have some issues with the content of the website. The user will provide the issue type and the element that needs to be fixed. You need to provide a solution for the issue based on the content of the website.Give the user the correct statement that should replace the current text . The solution should be in a single line and should not contain any code or HTML tags. The solution should be in English.'''},
+    #     {"role": "user", "content": f"issue_type:{issue_type},issue_decription:{description},current_contetn:{current_content}"}
+    # ]
+# )
+    messages = [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f'''This is the summary of a website.{context}. the user have some issues with the content of the website. The user will provide the issue type and the element that needs to be fixed. You need to provide a solution for the issue based on the content of the website.Give the user the correct statement that should replace the current text.If there is no current content then genrate a based on the context. The solution should be in a single line and should not contain any code or HTML tags. The solution must be in the same languages as the rest of the context.Do NOT give any extra explanation or instructions.'''
+                    }
+                ]
+            },
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f"issue_type:{issue_type},issue_decription:{description},current_content:{current_content}"
+                    }
+                ]
+            }
+        ]
+    completion = client.chat.completions.create(
+    model=deployment,
+    messages=messages,
+    max_tokens=800,
+    temperature=1,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0,
+    stop=None,
+    stream=False
+    )
+
+    response=completion.choices[0].message.content
+    recommendations.append(response)
     return recommendations
 
 @app.route('/ai-recommendation', methods=['POST'])
@@ -257,7 +333,7 @@ def scan_url():
         # Start background summarization task
         thread = threading.Thread(
             target=background_summarize_task, 
-            args=(task_id, page_text)
+            args=(task_id, url)
         )
         thread.daemon = True
         thread.start()

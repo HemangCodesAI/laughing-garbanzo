@@ -3,3 +3,4 @@ modelfile.txt
 output.txt
 test.ipynb
 __pycache__/
+.env

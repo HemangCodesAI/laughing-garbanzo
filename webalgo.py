@@ -43,7 +43,8 @@ class HTMLSEOScanner:
                 'type': 'CRITICAL',
                 'element': 'Title Tag',
                 'issue': 'Missing title tag',
-                'description': 'No title tag found in the HTML'
+                'description': 'No title tag found in the HTML',
+                'suggest':True
             })
         elif len(title_tags) > 1:
             self.vulnerabilities.append({
@@ -61,7 +62,8 @@ class HTMLSEOScanner:
                     'type': 'CRITICAL',
                     'element': 'Title Tag',
                     'issue': 'Empty title tag',
-                    'description': 'Title tag is empty'
+                    'description': 'Title tag is empty',
+                    'suggest':True
                 })
             elif title_length < 30:
                 self.warnings.append({
@@ -69,7 +71,8 @@ class HTMLSEOScanner:
                     'element': 'Title Tag',
                     'issue': 'Title too short',
                     'actual_text': title_text,
-                    'description': f'Title is {title_length} characters, recommended minimum is 30'
+                    'description': f'Title is {title_length} characters, recommended minimum is 30',
+                    'suggest':True
                 })
             elif title_length > 160:
                 self.vulnerabilities.append({
@@ -77,7 +80,8 @@ class HTMLSEOScanner:
                     'element': 'Title Tag',
                     'issue': 'Title too long',
                     'actual_text': title_text,
-                    'description': f'Title is {title_length} characters, recommended maximum is 160'
+                    'description': f'Title is {title_length} characters, recommended maximum is 160',
+                    'suggest':True
                 })
             elif title_length < 150:
                 self.recommendations.append({
@@ -85,7 +89,8 @@ class HTMLSEOScanner:
                     'element': 'Title Tag',
                     'issue': 'Title could be optimized',
                     'actual_text': title_text,
-                    'description': f'Title is {title_length} characters, ideal range is 150-160'
+                    'description': f'Title is {title_length} characters, ideal range is 150-160',
+                    'suggest':True
                 })
     
     def _check_h1_tag(self, soup):
@@ -97,7 +102,8 @@ class HTMLSEOScanner:
                 'type': 'CRITICAL',
                 'element': 'H1 Tag',
                 'issue': 'Missing H1 tag',
-                'description': 'No H1 tag found on the page'
+                'description': 'No H1 tag found on the page',
+                'suggest':True
             })
         elif len(h1_tags) > 1:
             self.vulnerabilities.append({
@@ -115,7 +121,8 @@ class HTMLSEOScanner:
                     'type': 'CRITICAL',
                     'element': 'H1 Tag',
                     'issue': 'Empty H1 tag',
-                    'description': 'H1 tag is empty'
+                    'description': 'H1 tag is empty',
+                    'suggest':True
                 })
             elif h1_length < 20:
                 self.warnings.append({
@@ -123,7 +130,8 @@ class HTMLSEOScanner:
                     'element': 'H1 Tag',
                     'issue': 'H1 too short',
                     'actual_text': h1_text,
-                    'description': f'H1 is {h1_length} characters, recommended minimum is 20'
+                    'description': f'H1 is {h1_length} characters, recommended minimum is 20',
+                    'suggest':True
                 })
             elif h1_length > 70:
                 self.warnings.append({
@@ -131,7 +139,8 @@ class HTMLSEOScanner:
                     'element': 'H1 Tag',
                     'issue': 'H1 too long',
                     'actual_text': h1_text,
-                    'description': f'H1 is {h1_length} characters, recommended maximum is 70'
+                    'description': f'H1 is {h1_length} characters, recommended maximum is 70',
+                    'suggest':True
                 })
     
     def _check_header_hierarchy(self, soup):
@@ -185,7 +194,8 @@ class HTMLSEOScanner:
                 'type': 'CRITICAL',
                 'element': 'Meta Description',
                 'issue': 'Missing meta description',
-                'description': 'No meta description tag found'
+                'description': 'No meta description tag found',
+                'suggest':True
             })
         else:
             content = meta_desc.get('content', '').strip()
@@ -196,7 +206,8 @@ class HTMLSEOScanner:
                     'type': 'CRITICAL',
                     'element': 'Meta Description',
                     'issue': 'Empty meta description',
-                    'description': 'Meta description is empty'
+                    'description': 'Meta description is empty',
+                    'suggest':True
                 })
             elif desc_length < 120:
                 self.warnings.append({
@@ -204,7 +215,8 @@ class HTMLSEOScanner:
                     'element': 'Meta Description',
                     'issue': 'Meta description too short',
                     'actual_text': content,
-                    'description': f'Meta description is {desc_length} characters, recommended minimum is 120'
+                    'description': f'Meta description is {desc_length} characters, recommended minimum is 120',
+                    'suggest':True
                 })
             elif desc_length > 160:
                 self.vulnerabilities.append({
@@ -212,7 +224,8 @@ class HTMLSEOScanner:
                     'element': 'Meta Description',
                     'issue': 'Meta description too long',
                     'actual_text': content,
-                    'description': f'Meta description is {desc_length} characters, recommended maximum is 160'
+                    'description': f'Meta description is {desc_length} characters, recommended maximum is 160',
+                    'suggest':True
                 })
     
     def _check_image_optimization(self, soup):
@@ -244,7 +257,8 @@ class HTMLSEOScanner:
                         'element': 'Image ALT',
                         'issue': 'ALT text could be longer',
                         'actual_text': alt_text,
-                        'description': f'Image ALT text is {alt_length} characters, ideal range is 80-125'
+                        'description': f'Image ALT text is {alt_length} characters, ideal range is 80-125',
+                        'suggest':True
                     })
             
             # Check for descriptive file names
@@ -279,8 +293,8 @@ class HTMLSEOScanner:
                 'type': 'WARNING',
                 'element': 'Image ALT',
                 'issue': 'ALT text too long',
-                'actual_text': alt_text,
                 'description': f'{images_with_long_alt} images have ALT text longer than 125 characters'
+
             })
     
     def _check_canonical_tags(self, soup):

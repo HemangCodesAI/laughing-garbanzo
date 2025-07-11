@@ -562,50 +562,55 @@
         }
 
         function addIssueSection(title, issues, type) {
-        const section = document.createElement('div');
-        section.className = 'issues-section';
-        section.innerHTML = `
-            <h3 class="section-title">${title}</h3>
-            ${issues.map((issue,index) => `
-                <div class="issue-card ${type}">
-                    <div class="issue-title">${issue.issue}</div>
-                    <div class="issue-element">${issue.element}</div>
-                    <div class="issue-description">${issue.description}</div>
-                    ${issue.actual_text !== undefined ? `
-                        <div class="actual-text">
-                            <strong>Current text:</strong> 
-                            <span class="text-content">"${issue.actual_text}"</span>
-                            ${issue.image_src ? `<br><small>Image: ${issue.image_src}</small>` : ''}
-                        </div>
-                    ` : ''}
-                    ${type === 'recommendation' ? `
-                            <button id="actionBtn" class="ai-recommendation-btn" disabled=True onclick="getAIRecommendation('${issue.issue}', '${issue.description}', '${issue.actual_text}', ${index})">
-                                🤖 Get AI Suggestions
-                            </button>
-                            <div class="ai-loading" id="ai-loading-${index}">
-                                <div class="ai-spinner"></div>
-                                <p>Generating AI recommendations...</p>
-                            </div>
-                            <div class="ai-recommendations" id="ai-recommendations-${index}">
-                                <h4>🤖 AI Recommendations</h4>
-                                <ul id="ai-list-${index}"></ul>
+            const section = document.createElement('div');
+            section.className = 'issues-section';
+            section.innerHTML = `
+                <h3 class="section-title">${title}</h3>
+                ${issues.map((issue,index) => `
+                    <div class="issue-card ${type}">
+                        <div class="issue-title">${issue.issue}</div>
+                        <div class="issue-element">${issue.element}</div>
+                        <div class="issue-description">${issue.description}</div>
+                        ${issue.actual_text !== undefined ? `
+                            <div class="actual-text">
+                                <strong>Current text:</strong> 
+                                <span class="text-content">"${issue.actual_text}"</span>
+                                ${issue.image_src ? `<br><small>Image: ${issue.image_src}</small>` : ''}
                             </div>
                         ` : ''}
-                </div>
-            `).join('')}
-        `;
-        issuesContainer.appendChild(section);
-    }
-        
+                        ${issue.suggest ? `
+                                <button id="actionBtn" class="ai-recommendation-btn" disabled=True onclick="getAIRecommendation('${issue.issue}', '${issue.description}', '${issue.actual_text}', ${index}, '${type}')">
+                                    🤖 Get AI Suggestions
+                                </button>
+                                <div class="ai-loading" id="ai-loading-${index}-${type}">
+                                    <div class="ai-spinner"></div>
+                                    <p>Generating AI recommendations...</p>
+                                </div>
+                                <div class="ai-recommendations" id="ai-recommendations-${index}-${type}">
+                                    <h4>🤖 AI Recommendations</h4>
+                                    <ul id="ai-list-${index}-${type}"></ul>
+                                </div>
+                            ` : ''}
+                    </div>
+                `).join('')}
+            `;
+            issuesContainer.appendChild(section);
+        }
+            
         function startEventSource(taskId) {
         eventSource = new EventSource(`/events/${taskId}`);
         
         eventSource.addEventListener('summary_complete', function(event) {
             const data = JSON.parse(event.data);
             
+            // const actionBtn=document.getElementById('actionBtn');
             // Store summary in cookie
             document.cookie = `summary_${taskId}=${encodeURIComponent(data.summary)}; path=/`;
-            const actionBtn=document.getElementById('actionBtn');
+            // enable the all action buttons
+            const aiButtons = document.querySelectorAll('.ai-recommendation-btn');
+            aiButtons.forEach(btn => {
+                btn.disabled = false;
+            });
             // Enable the action button
             actionBtn.disabled = false;
             
@@ -640,11 +645,11 @@
             return null;
         }
         
-        async function getAIRecommendation(issueType, description, current_content, index) {
+        async function getAIRecommendation(issueType, description, current_content, index, type) {
             const button = event.target;
-            const loading = document.getElementById(`ai-loading-${index}`);
-            const recommendations = document.getElementById(`ai-recommendations-${index}`);
-            const aiList = document.getElementById(`ai-list-${index}`);
+            const loading = document.getElementById(`ai-loading-${index}-${type}`);
+            const recommendations = document.getElementById(`ai-recommendations-${index}-${type}`);
+            const aiList = document.getElementById(`ai-list-${index}-${type}`);
             
             // Show loading state
             button.disabled = true;
